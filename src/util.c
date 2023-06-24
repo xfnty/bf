@@ -61,17 +61,3 @@ void file_unload(unsigned char* file) {
 
     free(file);
 }
-
-const char* humanize_bytesize(size_t value) {
-    const char* suffixes[] = { " B", " kB", " MB", " GB", " TB" };
-    static char buffer[64] = {0};
-
-    int i = 0;
-    while (value > 1024 && i < ARRAY_LENGTH(suffixes) - 1) {
-        i++;
-        value /= 1024;
-    }
-
-    snprintf(buffer, sizeof(buffer), "%lu%s", value, suffixes[i]);
-    return buffer;
-}

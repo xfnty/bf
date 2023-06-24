@@ -12,9 +12,10 @@ from dataclasses import dataclass
 from typing import List
 
 
-PROJECT_NAME    = 'bfc'
+PROJECT_NAME    = 'bf'
 
 PROJECT_DIR     = os.path.realpath(os.path.dirname(__file__))
+ASSETS_DIR      = os.path.join(PROJECT_DIR, 'assets')
 CMAKE_DIR       = os.path.join(PROJECT_DIR, '.cmake')
 BUILD_DIR       = os.path.join(PROJECT_DIR, 'build')
 CMAKE           = shutil.which('cmake')
@@ -75,6 +76,15 @@ def print_stage_title(s: str):
     print(f'----- {s} -----')
 
 
+def copy_assets(target: BuildTarget):
+    if os.path.exists(ASSETS_DIR):
+        shutil.copytree(
+            ASSETS_DIR,
+            os.path.join(get_exe_dir_for(target), 'assets'),
+            dirs_exist_ok=True
+        )
+
+
 def clean():
     print_stage_title('Cleaning up')
     run_command(['git', 'clean', '-Xdf'], status=False)
@@ -120,6 +130,7 @@ def build(target: BuildTarget):
 
 def run(target: BuildTarget, args: list=[]):
     print_stage_title('Running')
+    copy_assets(target)
     exit_code = run_command(
         [get_exe_file_for(target)] + args,
         cwd=get_exe_dir_for(target),

@@ -9,12 +9,11 @@ option(BUILD_SHARED_LIBS "Build shared libs" OFF)
 
 
 # ===== Project ===== #
-project("bfc" LANGUAGES C)
+project("bf" LANGUAGES C)
 add_compile_options(-g)
 
 
 # ===== Third Party libraries ===== #
-add_submodule("klib" "src" "klib")
 
 
 # ===== Source files ===== #
