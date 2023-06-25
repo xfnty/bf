@@ -23,6 +23,16 @@ bool op_get(bf_vm_t* vm);
 bool op_bopen(bf_vm_t* vm);
 bool op_bclose(bf_vm_t* vm);
 
+bool op_end(bf_vm_t* vm);
+bool op_store_pointer(bf_vm_t* vm);
+bool op_get_pointer(bf_vm_t* vm);
+bool op_rshift(bf_vm_t* vm);
+bool op_lshift(bf_vm_t* vm);
+bool op_not(bf_vm_t* vm);
+bool op_xor(bf_vm_t* vm);
+bool op_and(bf_vm_t* vm);
+bool op_or(bf_vm_t* vm);
+
 
 /* variables */
 static const operator_f operators[256] = {
@@ -34,6 +44,16 @@ static const operator_f operators[256] = {
     [','] = op_get,
     ['['] = op_bopen,
     [']'] = op_bclose,
+    // Extended type 1
+    ['@'] = op_end,
+    ['$'] = op_store_pointer,
+    ['!'] = op_get_pointer,
+    ['}'] = op_rshift,
+    ['{'] = op_lshift,
+    ['~'] = op_not,
+    ['^'] = op_xor,
+    ['&'] = op_and,
+    ['|'] = op_or,
 };
 
 
@@ -74,6 +94,9 @@ bool bf_vm_tick(bf_vm_t* vm) {
     if (vm->PC >= vm->program_size)
         return false;
 
+    while (operators[vm->program[vm->PC]] == NULL)
+        vm->PC++;
+
     return operators[vm->program[vm->PC]](vm);
 }
 
@@ -89,11 +112,6 @@ void bf_vm_destroy(bf_vm_t* vm) {
 bool bf_vm_validate(bf_vm_t* vm) {
     int ld = 0;
     for (int i = 0; i < vm->program_size; i++) {
-        if (operators[vm->program[i]] == NULL) {
-            LOGF_ERROR("Unknown operator '%c'", vm->program[i]);
-            return false;
-        }
-
         ld += (vm->program[i] == '[' ? 1 : (vm->program[i] == ']' ? -1 : 0));
         if (ld < 0) {
             LOGF_ERROR("Unmatched close brace at %d", i);
@@ -111,6 +129,7 @@ bool bf_vm_validate(bf_vm_t* vm) {
 
 bool op_next(bf_vm_t* vm) {
     assert(vm != NULL);
+
     vm->MP = WRAP(vm->MP + 1, 0, vm->memory_size);
     vm->PC++;
     return true;
@@ -118,6 +137,7 @@ bool op_next(bf_vm_t* vm) {
 
 bool op_prev(bf_vm_t* vm) {
     assert(vm != NULL);
+
     vm->MP = WRAP(vm->MP - 1, 0, vm->memory_size);
     vm->PC++;
     return true;
@@ -125,6 +145,7 @@ bool op_prev(bf_vm_t* vm) {
 
 bool op_inc(bf_vm_t* vm) {
     assert(vm != NULL);
+
     vm->memory[vm->MP]++;
     vm->PC++;
     return true;
@@ -132,6 +153,7 @@ bool op_inc(bf_vm_t* vm) {
 
 bool op_dec(bf_vm_t* vm) {
     assert(vm != NULL);
+
     vm->memory[vm->MP]--;
     vm->PC++;
     return true;
@@ -139,13 +161,16 @@ bool op_dec(bf_vm_t* vm) {
 
 bool op_put(bf_vm_t* vm) {
     assert(vm != NULL);
+
     printf("%c", vm->memory[vm->MP]);
+    // printf("%d\n", (int)vm->memory[vm->MP]);
     vm->PC++;
     return true;
 }
 
 bool op_get(bf_vm_t* vm) {
     assert(vm != NULL);
+
     vm->memory[vm->MP] = getchar();
     vm->PC++;
     return true;
@@ -155,6 +180,7 @@ bool op_bopen(bf_vm_t* vm) {
     assert(vm != NULL);
 
     if (vm->memory[vm->MP]) {
+        vm->LD++;
         vm->PC++;
         return true;
     }
@@ -176,7 +202,10 @@ bool op_bopen(bf_vm_t* vm) {
 }
 
 bool op_bclose(bf_vm_t* vm) {
+    assert(vm != NULL);
+
     if (vm->memory[vm->MP] == 0) {
+        vm->LD--;
         vm->PC++;
         return true;
     }
@@ -194,5 +223,82 @@ bool op_bclose(bf_vm_t* vm) {
     }
 
     vm->PC = pc;
+    return true;
+}
+
+bool op_end(bf_vm_t* vm) {
+    assert(vm != NULL);
+    return false;
+}
+
+bool op_store_pointer(bf_vm_t* vm) {
+    assert(vm != NULL);
+    
+    vm->ST = vm->PC;
+    vm->PC++;
+
+    return true;
+}
+
+bool op_get_pointer(bf_vm_t* vm) {
+    assert(vm != NULL);
+    
+    vm->memory[vm->MP] = vm->ST;
+    vm->PC++;
+
+    return true;
+}
+
+bool op_rshift(bf_vm_t* vm) {
+    assert(vm != NULL);
+    
+    vm->memory[vm->MP] >>= 1;
+    vm->PC++;
+
+    return true;
+}
+
+bool op_lshift(bf_vm_t* vm) {
+    assert(vm != NULL);
+    
+    vm->memory[vm->MP] <<= 1;
+    vm->PC++;
+
+    return true;
+}
+
+bool op_not(bf_vm_t* vm) {
+    assert(vm != NULL);
+    
+    vm->memory[vm->MP] = !vm->memory[vm->MP];
+    vm->PC++;
+
+    return true;
+}
+
+bool op_xor(bf_vm_t* vm) {
+    assert(vm != NULL);
+    
+    vm->memory[vm->MP] ^= vm->ST;
+    vm->PC++;
+
+    return true;
+}
+
+bool op_and(bf_vm_t* vm) {
+    assert(vm != NULL);
+    
+    vm->memory[vm->MP] &= vm->ST;
+    vm->PC++;
+
+    return true;
+}
+
+bool op_or(bf_vm_t* vm) {
+    assert(vm != NULL);
+    
+    vm->memory[vm->MP] |= vm->ST;
+    vm->PC++;
+
     return true;
 }

@@ -14,6 +14,7 @@ typedef struct {
     unsigned int    PC;
     unsigned int    MP;
     int             LD;
+    unsigned char   ST;
 } bf_vm_t;
 
 
