@@ -14,5 +14,5 @@ bf <input file>
 ## Developing
 Building and running:
 ```
-python ./toolchain.py -br -a ./assets/hello-world.bf
+make args="assets/hello-world.bf"
 ```
